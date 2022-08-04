@@ -11,4 +11,6 @@ Reproducibility usage:
 
 - With the representations: GWAS, heritability and other statistics used can be replicated by runing 'GWAS_R2_H2.R' in src/model/.
 
+- Reverse GWAS can be run with 'Reverse_GWAS.py' in src/model/.
+
 - With representations and statistics: All generated images can be replicated using 'Plot_maker.ipynb' and 'Plot_maker.Rmd'.

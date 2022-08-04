@@ -516,10 +516,10 @@ my_GWAS(means_path = 'results/Supervised/Predicted_means_IT_C0-1-2-3-4-5-6-7-8-9
 x = 'data/processed/Hidden_representations/self-supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32.csv'
 
 my_heritability(x,
-                'Self-Supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32')
+                'results/Self-Supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32')
 
 my_variance_explained(x,
-                      'Self-Supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32')
+                      'results/Self-Supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32')
 
 get_means(metainfo_path =  'data/processed/Hidden_representations/self-supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32_metainfo.csv',
           rep_path = 'data/processed/Hidden_representations/self-supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32.csv',
@@ -536,9 +536,9 @@ my_GWAS('results/Self-Supervised/Predicted_means_MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-
 x = 'data/processed/Hidden_representations/Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128.csv'
 
 my_heritability(x,
-                'Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128')
+                'results/Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128')
 my_variance_explained(x,
-                      'Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128')
+                      'results/Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128')
 
 
 get_means(metainfo_path =  'data/processed/Hidden_representations/Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128_metainfo.csv',
