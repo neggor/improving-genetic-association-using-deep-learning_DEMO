@@ -1,5 +1,5 @@
 # Thesis project: Improving genetic association using deep learning
-![alt text](https://github.com/neggor/improving-genetic-association-using-deep-learning/blob/main/images/Other/Introductory_plot.png)
+![alt text](https://github.com/neggor/improving-genetic-association-using-deep-learning_DEMO/blob/main/images/Other/Introductory_plot.png)
 
 Raw data is available in a private Kaggle repository. Access may be requested.
 
