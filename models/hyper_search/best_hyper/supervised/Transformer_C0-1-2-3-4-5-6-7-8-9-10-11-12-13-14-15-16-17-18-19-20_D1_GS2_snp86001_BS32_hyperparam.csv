@@ -1,0 +1,9 @@
+,0
+head_size,244.0
+num_heads,4.0
+dropout,0.15
+ff_dims,22.0
+learning_rate,1.3585232518948138e-06
+beta_1,0.5420799383248426
+beta_2,0.6229805593517254
+num_transformer_blocks,4.0

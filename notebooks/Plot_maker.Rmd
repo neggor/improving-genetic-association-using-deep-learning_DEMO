@@ -1,0 +1,125 @@
+---
+title: "Plot_maker"
+author: "Jordi Alonso Esteve"
+date: "29/06/2022"
+output: html_document
+---
+
+```{r}
+setwd('..')
+genotype_codes <- read.csv('data/raw/raw_data/genotype-codes.csv')
+load('data/raw/raw_data/R_data/LFN350acc_000_new_gene_annotation_ibd_kinship.RData')
+```
+```{r}
+library(tidyverse)
+library(ggpubr)
+library(sf)
+```
+# Population structure plot 
+
+```{r}
+PCA <- prcomp(t(GWAS.obj$markers))
+```
+
+```{r}
+PCA_2c <- data.frame(PCA$x[, 1:2])
+```
+
+```{r}
+index <-  match(rownames(PCA_2c), genotype_codes$ABRC.new)
+index <- index[!is.na(index)]
+coordinates <- genotype_codes[index, c('lat', 'long')]
+```
+
+
+
+```{r}
+library("rnaturalearth")
+library("rnaturalearthdata")
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+class(world)
+```
+
+```{r}
+crs_use <- "+proj=laea +lat_0=30 +lon_0=-95"
+
+d_points <- coordinates[complete.cases(coordinates), ] %>% 
+  st_as_sf(coords = c("long", "lat"), crs = 4326) %>% 
+  st_transform(crs = crs_use)
+
+p2 <- ggplot(data = world, alhpa = 0.5) +
+      geom_sf() +
+      geom_sf(data = d_points, 
+               color = alpha("red",0.8), size = 0.5) + 
+      theme_minimal()
+      #ggtitle('Geographical location\nArabidopsis accessions') +
+      #theme(plot.title = element_text(hjust = 0.5))
+
+plot(p2)
+```
+```{r}
+library(sp)
+library(rworldmap)
+# https://stackoverflow.com/questions/21708488/get-country-and-continent-from-longitude-and-latitude-point-in-r
+# The single argument to this function, points, is a data.frame in which:
+#   - column 1 contains the longitude in degrees
+#   - column 2 contains the latitude in degrees
+coords2continent = function(points)
+{  
+  countriesSP <- getMap(resolution='low')
+  #countriesSP <- getMap(resolution='high') #you could use high res map from rworldxtra if you were concerned about detail
+
+  # converting points to a SpatialPoints object
+  # setting CRS directly to that from rworldmap
+  pointsSP = SpatialPoints(points, proj4string=CRS(proj4string(countriesSP)))  
+
+
+  # use 'over' to get indices of the Polygons object containing each point 
+  indices = over(pointsSP, countriesSP)
+
+  #indices$continent   # returns the continent (6 continent model)
+  #return(indices$REGION)   # returns the continent (7 continent model)
+  return(indices$ADMIN)  #returns country name
+  #indices$ISO3 # returns the ISO3 code 
+}
+```
+
+```{r}
+points = data.frame(lon = coordinates[complete.cases(coordinates), 'long'], lat = coordinates[complete.cases(coordinates), 'lat'])
+
+Countries = coords2continent(points)
+
+```
+
+
+
+```{r}
+setwd('..')
+Comp_coord <- cbind(PCA_2c[complete.cases(coordinates), ] , coordinates[complete.cases(coordinates), ], Countries)
+
+p1 <- Comp_coord %>% 
+  filter(!is.na(Countries)) %>%
+  ggplot(aes(x = PC1, y = PC2, colour = Countries, shape = Countries)) +
+  geom_point() +
+  theme_bw() +
+  scale_shape_manual(values= rep(c(1, 2, 3, 8), 8)[1:29]) +
+  xlab('Principal component 1') +
+  ylab('Principal component 2') +
+  ggtitle('Principal component analysis\nArabidopsis genetic markers array') +
+    theme(plot.title = element_text(hjust = 0.5)) 
+
+plot(p1)
+
+```
+
+
+```{r}
+getwd()
+setwd('..')
+Comp_coord$Genotype <- as.numeric(genotype_codes$EthoAnalysisId[match(rownames(Comp_coord), genotype_codes$ABRC.new)])
+
+write.csv(Comp_coord[, c(3, 4, 5, 6)], 'data/processed/Countries_genotype.csv')
+```
+
+

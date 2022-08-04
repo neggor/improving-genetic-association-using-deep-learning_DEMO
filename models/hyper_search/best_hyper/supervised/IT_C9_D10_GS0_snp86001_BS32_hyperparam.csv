@@ -1,0 +1,9 @@
+,0
+depth,1.0
+dropout,0.15
+lr,0.001
+beta_1,0.2
+beta_2,0.3901927063547159
+kernel_size,34.0
+nb_filters,128.0
+bottleneck_size,5.0

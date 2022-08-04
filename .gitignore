@@ -1,0 +1,23 @@
+# Do not store data
+/data/raw/raw_data
+/data/interim/featured_trajectories
+/data/interim/Genotype_class
+/data/interim/missing_data_info
+/data/interim/SNPs
+/data/processed/anti-Stratified
+/data/processed/Genotype_stratified
+/data/processed/No_stratification
+/data/processed/PCA
+/models/hyper_search/Contrastive
+/models/hyper_search/tuner_logs
+/models/history_logs
+/models/training_logs
+
+
+# Byte-compiled / optimized / DLL files / .Rhistory
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints
+*/.ipynb_checkpoints/*
+.Rhistory
+*/.Rhistory/*
