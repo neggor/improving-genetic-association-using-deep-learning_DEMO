@@ -4,7 +4,10 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.model_selection import GridSearchCV
 from sklearn import svm
-
+from textwrap import wrap
+from sklearn.decomposition import PCA
+from sklearn.cross_decomposition import CCA
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 import numpy as np
 import pandas as pd
@@ -17,7 +20,8 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 from matplotlib.pyplot import figure
 import seaborn as sns
-
+import tensorflow as tf
+import tensorflow_addons as tfa
 
 def pred_performance_by_SNP(X_path, SNP, hd_name):
     '''
@@ -294,39 +298,146 @@ def calculate_correlations(X_path, Stratified: bool, hd_name):
         del MI_train, MI_val, MI_test
 
     MI = pd.DataFrame(MI)
-    MI.columns = ['_',  '_',  'Trial', 'Arena', 'Genotype', 'Plant', 'Export file']
-    MI = MI.drop(['_', 'Export file'], 1)
+    MI.columns = ['Leaf', 'AnalysisGroup',  'Trial', 'Arena', 'Genotype', 'Plant', 'Export file']
+    MI = MI.drop(['Leaf', 'Export file'], 1)
+
+    
     #print(MI.shape)
     #### TMP TODO generate metainfo in order
     #MI.to_csv(f'data/processed/Hidden_representations/supervised/{hd_name}_metainfo.csv', index = False)
     #exit()
     ####
     X_AI = pd.read_csv(X_path)
-    X_H = pd.read_csv('D:\Thesis\Thesis_v1\project\data\processed\Hidden_representations\Hand_features\handcrafted_dimensions.csv')
-    X_H_metainfo = pd.read_csv('data\processed\Hidden_representations\Hand_features\handcrafted_dimensions_meta_info.csv').drop(['Leaf', 'AnalysisGroup'], 1)
+    X_H = pd.read_csv('data/processed/Hidden_representations/Hand_features/handcrafted_dimensions.csv')
+    #X_H_metainfo = pd.read_csv('data/processed/Hidden_representations/Hand_features/handcrafted_dimensions_meta_info.csv').drop(['Leaf', 'AnalysisGroup'], 1)
+    X_H_metainfo = pd.read_csv('data/processed/Hidden_representations/Hand_features/handcrafted_dimensions_meta_info.csv').drop(['Leaf'], 1)
     #print(X_H_metainfo.shape)
 
-    MI_list = list(MI['Trial'].astype(str) + MI['Arena'].astype(str) +
-     MI['Genotype'].astype(str) +  MI['Plant'].astype(str))
 
-    X_H_metainfo_list = list(X_H_metainfo['Trial'].astype(str) +
-        X_H_metainfo['Arena'].astype(str) +
+
+    MI_list = list( MI['Genotype'].astype(str) +  MI['Plant'].astype(str)) 
+
+    X_H_metainfo_list = list(
         X_H_metainfo['Genotype'].astype(str) +
         X_H_metainfo['Plant'].astype(str))
-
-    X_H_metainfo_index  = [X_H_metainfo_list.index(x) if x in X_H_metainfo_list else -1 for x in MI_list]
-    Not_available_in_H = np.where(np.array(X_H_metainfo_index) == -1)[0][0]
     
-    X_H_metainfo_index.pop(Not_available_in_H)
+   
+    X_AI_index  = [MI_list.index(x) if x in MI_list else -1 for x in X_H_metainfo_list]
 
+    my_bool = np.array(X_AI_index) != -1
+    My_index = np.array(X_AI_index)[np.where(my_bool)[0]]
+    #print(np.array(X_H_metainfo_list)[my_bool])
+    #print(np.array(MI_list)[My_index])
+
+    X_AI = X_AI.iloc[My_index, :]
+    X_H = X_H.iloc[my_bool, :]
+
+    #rint(X_AI.shape)
+    #print(X_H.shape)
     
-    #print(X_AI['Genotype'].drop(Not_available_in_H, 0))
-    #print(MI['Genotype'].drop(Not_available_in_H, 0))
-    #print(X_H['Genotype'][X_H_metainfo_index])
-    #placeholder = np.zeros([X_AI.shape[1] - 1 , X_H.shape[1]])
+    scaler = StandardScaler()
+    
+    
+    X_AI_s = scaler.fit_transform(X= X_AI.drop('Genotype', 1))
+    X_H_s = scaler.fit_transform(X = X_H.drop('Genotype', 1))
+    pca = PCA(n_components=1)
+    cca = CCA(n_components=1)
+    # PCA
+    pca_AI = pca.fit_transform(X_AI_s)
+    pca_H = pca.fit_transform(X_H_s)
+    
+    #print(pca_AI)
+    #print(pca_H)
+
+    print('PCA:', np.corrcoef(np.ravel(pca_AI), np.ravel(pca_H))[0, 1])
+
+    #CCA
+
+    cca.fit(X_AI_s, X_H_s)
+    X_c, Y_c = cca.transform(X_AI_s, X_H_s)
+    #print(X_c.shape)
+    #print(Y_c.shape)
+    
+
+    print('CCA:', np.corrcoef(np.ravel(X_c), np.ravel(Y_c))[0, 1])
+
+    #plt.scatter(pca_AI, pca_H, s = 0.5, c = 'black')
+    #plt.xlabel('Generated traits PC1')
+    #plt.ylabel('Handcrafted traits PC1')
+    #plt.title('PCA correlation')
+    ##plt.show()
+#
+    #plt.scatter(X_c, Y_c, s = 0.5, c = 'black')
+    #plt.xlabel('Generated traits CCA1')
+    #plt.ylabel('Handcrafted traits CCA1')
+    #plt.title('CCA correlation')
+    ##plt.show()
+
+    ## Extract probabilities
+    
+
+    my_model = tf.keras.models.load_model('models/trained_models/Supervised/IT_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS0_snp86001_BS20_0.h5',
+    custom_objects = {'Addons>MatthewsCorrelationCoefficient': tfa.metrics.MatthewsCorrelationCoefficient(num_classes= 2)})
+    
+    print('Loading stratified splits...')
+    X_train = np.load('data/processed/Genotype_stratified/X_train.npy')[:, ::1, np.arange(0, 21)]
+    X_val = np.load('data/processed/Genotype_stratified/X_val.npy')[:, ::1, np.arange(0, 21)]
+    X_test = np.load('data/processed/Genotype_stratified/X_test.npy')[:, ::1, np.arange(0, 21)]
+    print('X shape', X_train.shape)
+
+    Big_X = np.vstack((X_train, X_val, X_test))
+    my_probabilities = my_model.predict(Big_X, 5)
+    print(my_probabilities)
+    print(my_probabilities.shape)
+    
+    my_probabilities_0 = my_probabilities[My_index, 1]
+    my_probabilities_1 = my_probabilities[My_index, 0]
+    prob_corr_0 = []
+    prob_corr_1 = []
+    names = []
+    print('Probabilities corr...')
+    for i, col in enumerate(X_H.columns):
+        if col == 'Genotype':
+            continue
+        names.append(col)
+        prob_corr_0.append(np.corrcoef(np.ravel(my_probabilities_0), np.ravel(X_H[col]))[0, 1])
+        prob_corr_1.append(np.corrcoef(np.ravel(my_probabilities_1), np.ravel(X_H[col]))[0, 1])
+        #print(np.corrcoef(np.ravel(my_probabilities), np.ravel(X_H[col]))[0, 1])
+    
+    #names = [ '\n'.join(wrap(l, 20)) for l in names ]
+
+    figure(figsize=(15, 120), dpi= 60)
+    my_colors = ['red' if x < 0 else 'green' for x in prob_corr_1]
+
+    plt.barh(names, prob_corr_1, linewidth = 1, edgecolor = 'black',
+                color = my_colors)
+    plt.tick_params('y', width= 4)
+    plt.tick_params('x', width= 0.5)
+    plt.title('Correlations with probability of marker score 1\nSNP 86001', fontsize = 25)
+    plt.savefig(f'results/{hd_name}_Correlations_with_probability_of_1.png')
+    plt.yticks(fontsize = 10)
+    plt.xlabel('Pearson correlation')
+    #plt.xticks(rotation = 90, fontsize = 30)
+    #plt.show()
+    #figure(figsize=(10, 8), dpi= 50)
+    #plt.tight_layout()
+    #plt.barh(names, prob_corr_1)
+    #plt.title('Correlations with probability of 1')
+    #plt.savefig(f'results/{hd_name}_Correlations_with_probability_of_1.png')
+    #plt.yticks(fontsize = 15)
+    ##plt.xticks(rotation = 90, fontsize = 30)
+    #plt.show()
+
+#    figure(figsize=(20, 10), dpi=80)
+#    plt.barh(names, prob_corr_0)
+#    plt.title('Correlations with probability of 0')
+#    plt.savefig(f'results/{hd_name}_Correlations_with_probability_of_0.png')
+#    plt.yticks(fontsize = 30)
+#    #plt.xticks(rotation = 90, fontsize = 30)
+#    plt.show()
+#
     correlations = np.array(X_AI.drop('Genotype', 1).columns).reshape(len(X_AI.drop('Genotype', 1).columns), 1)
     
-    X_AI = X_AI.drop(Not_available_in_H, 0)
     for i, col in enumerate(X_H.columns):
         if col == 'Genotype':
             continue
@@ -351,6 +462,12 @@ def calculate_correlations(X_path, Stratified: bool, hd_name):
     plt.savefig(f'results/{hd_name}_correlations.png')
     
 
+
+# Correlations EthoAnalysis and Supervised
+calculate_correlations('data/processed/Hidden_representations/supervised/IT_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_snp86001_BS20.csv',
+ 1,
+'/Supervised/IT_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_snp86001_BS20')
+
 # REVERSE GWAS RUN:
 # Hancrafted:
 sweep_whole_genome("data/processed/Hidden_representations/Hand_features/handcrafted_dimensions.csv",
@@ -362,7 +479,7 @@ sweep_whole_genome("data/processed/Hidden_representations/supervised/IT_C0-1-2-3
 sweep_whole_genome("data/processed/Hidden_representations/self-supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32.csv",
                     'Self-Supervised/MINIMAL_VAE_C0-1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_GS1_BS32')
 # Contrastive:
-sweep_whole_genome("data\processed\Hidden_representations\Contrastive\MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128.csv",
+sweep_whole_genome("data/processed/Hidden_representations/Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128.csv",
                     'Contrastive/MINIMAL_Contrastive_C1-2-3-4-5-6-7-8-9-10-11-12-13-14-15-16-17-18-19-20_D1_BS128')
     
 
