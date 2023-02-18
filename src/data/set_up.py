@@ -97,8 +97,8 @@ if my_args['dc']:
     with zipfile.ZipFile('interim-data.zip', 'r') as zip_ref:
         zip_ref.extractall('.')
 
-    subprocess.run('mv interim/* .', shell= True) # Because Kaggle generates a folder over it!
-    subprocess.run('rm -r interim', shell= True)
+    #subprocess.run('mv interim/* .', shell= True) # Because Kaggle generates a folder over it!
+    #subprocess.run('rm -r interim', shell= True)
     subprocess.run('rm interim-data.zip', shell= True)
     os.chdir(origin)
 
